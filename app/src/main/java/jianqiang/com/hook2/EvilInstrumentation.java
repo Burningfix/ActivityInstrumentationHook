@@ -24,11 +24,14 @@ public class EvilInstrumentation extends Instrumentation {
         mBase = base;
     }
 
+    // 只跳一次
+    private boolean isJump = false;
+
     public ActivityResult execStartActivity(
             Context who, IBinder contextThread, IBinder token, Activity target,
             Intent intent, int requestCode, Bundle options) {
 
-        logd("XXX到此一游! target:" + target + "----- " + intent);
+        logd("XXX到此一游! [" + isJump + "] target:" + target + "----- " + intent);
 
         // 开始调用原始的方法, 调不调用随你,但是不调用的话, 所有的startActivity都失效了.
         // 由于这个方法是隐藏的,因此需要使用反射调用;首先找到这个方法
@@ -41,13 +44,17 @@ public class EvilInstrumentation extends Instrumentation {
 //                        intent, requestCode, options};
 
         ComponentName cn = intent.getComponent();
-        logi("cn.getPackageName().equals(\"jianqiang.com.hook2\"): " + cn.getPackageName().equals("jianqiang.com.hook2"));
-        logi(" cn.getClassName().equals(\"jianqiang.com.hook2.SecondActivity\"): " + cn.getClassName().equals("jianqiang.com.hook2.SecondActivity"));
-        if (cn.getPackageName().equals("jianqiang.com.hook2") && cn.getClassName().equals("jianqiang.com.hook2.SecondActivity")) {
+        if (!isJump && cn.getPackageName().equals("jianqiang.com.hook2") && cn.getClassName().equals("jianqiang.com.hook2.SecondActivity")) {
             cn = new ComponentName(who, "jianqiang.com.hook2.TsActivity");
             intent.setComponent(cn);
+            Bundle b = new Bundle();
+            b.putString("NA", "jianqiang.com.hook2.SecondActivity");
+            intent.putExtra("JUMP", b);
+            Cx.mContext = who;
+            Cx.mTarget = target;
+            isJump = true;
         }
-        logd("让我们拦截一下 target:" + target + "----- " + intent);
+        logd("让我们拦截一下 [" + isJump + "] target:" + target + "----- " + intent);
         Object[] v1 = {who, contextThread, token, target,
                 intent, requestCode, options};
         return (ActivityResult) RefInvoke.invokeInstanceMethod(

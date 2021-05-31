@@ -13,7 +13,7 @@ public class SecondActivity extends Activity {
         super.onCreate(savedInstanceState);
 
         TextView tv = new TextView(this);
-        tv.setText("SecondActivity");
+        tv.setText("声明 要打开的页面");
         setContentView(tv);
         //setContentView(R.layout.activity_main);
 
